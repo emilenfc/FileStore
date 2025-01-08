@@ -1,0 +1,400 @@
+basePath: /
+definitions:
+  handlers.ErrorResponse:
+    properties:
+      error:
+        example: Invalid credentials
+        type: string
+    type: object
+  handlers.FileResponse:
+    properties:
+      created_at:
+        example: "2025-01-08T12:00:00Z"
+        type: string
+      name:
+        example: document.pdf
+        type: string
+      size:
+        example: 1024
+        type: integer
+      url:
+        example: http://localhost:8085/uploads/ak_123/DOCUMENTS/document.pdf
+        type: string
+    type: object
+  handlers.FolderResponse:
+    properties:
+      created_at:
+        example: "2025-01-08T12:00:00Z"
+        type: string
+      id:
+        example: 1
+        type: integer
+      name:
+        example: DOCUMENTS
+        type: string
+    type: object
+  handlers.LoginRequest:
+    properties:
+      email:
+        example: user@example.com
+        type: string
+      password:
+        example: password123
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  handlers.LoginResponse:
+    properties:
+      token:
+        example: eyJhbGciOiJIUzI1NiIs...
+        type: string
+    type: object
+  handlers.RegisterRequest:
+    properties:
+      email:
+        example: john@example.com
+        type: string
+      firstname:
+        example: John
+        type: string
+      lastname:
+        example: Doe
+        type: string
+      password:
+        example: password123
+        type: string
+      phone:
+        example: "+250783544364"
+        type: string
+    required:
+    - email
+    - firstname
+    - lastname
+    - password
+    - phone
+    type: object
+  handlers.RegisterResponse:
+    properties:
+      message:
+        example: User created successfully
+        type: string
+      user:
+        $ref: '#/definitions/handlers.UserResponse'
+    type: object
+  handlers.SecretResponse:
+    properties:
+      api_secret:
+        example: as_987654321
+        type: string
+    type: object
+  handlers.UserResponse:
+    properties:
+      api_key:
+        example: ak_123456789
+        type: string
+      api_secret:
+        example: as_987654321
+        type: string
+      created_at:
+        example: "2025-01-08T12:00:00Z"
+        type: string
+      email:
+        example: john@example.com
+        type: string
+      firstname:
+        example: John
+        type: string
+      id:
+        example: 1
+        type: integer
+      lastname:
+        example: Doe
+        type: string
+      phone:
+        example: "+250783544364"
+        type: string
+    type: object
+  main.ErrorResponse:
+    properties:
+      error:
+        example: Invalid credentials
+        type: string
+    type: object
+  main.UploadResponse:
+    properties:
+      dir:
+        type: string
+      file_name:
+        type: string
+      file_url:
+        type: string
+      full_path:
+        type: string
+      message:
+        type: string
+    type: object
+host: localhost:8085
+info:
+  contact:
+    email: iyaemile4@gmail.com
+    name: API Support
+  description: A secure file storage API with user authentication and folder management
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: File Store API
+  version: "1.0"
+paths:
+  /api/folders:
+    get:
+      description: Get list of folders for the current user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handlers.FolderResponse'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - TokenAuth: []
+      summary: Get user folders
+      tags:
+      - folders
+  /api/folders/{folder}:
+    get:
+      description: Get list of files in a specific folder
+      parameters:
+      - description: Folder name
+        in: path
+        name: folder
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handlers.FileResponse'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - TokenAuth: []
+      summary: Get folder contents
+      tags:
+      - folders
+  /api/regenerate-secret:
+    post:
+      description: Generate a new API secret for the current user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.SecretResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - TokenAuth: []
+      summary: Regenerate API secret
+      tags:
+      - user
+  /api/user:
+    get:
+      description: Get current user's profile information
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.UserResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - TokenAuth: []
+      summary: Get user information
+      tags:
+      - user
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate user and receive JWT token
+      parameters:
+      - description: Login credentials
+        in: body
+        name: login
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.LoginResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: User login
+      tags:
+      - authentication
+  /register:
+    post:
+      consumes:
+      - application/json
+      description: Create a new user account
+      parameters:
+      - description: User registration details
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handlers.RegisterResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Register new user
+      tags:
+      - authentication
+  /upload:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Upload a file to a specific folder
+      parameters:
+      - description: API Key for authentication
+        in: header
+        name: X-API-Key
+        required: true
+        type: string
+      - description: API Secret for authentication
+        in: header
+        name: X-API-Secret
+        required: true
+        type: string
+      - description: Folder name
+        in: formData
+        name: folder
+        required: true
+        type: string
+      - description: File to upload
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/main.UploadResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/main.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/main.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/main.ErrorResponse'
+      summary: Upload file
+      tags:
+      - files
+  /uploads/{path}:
+    get:
+      description: Download a file
+      parameters:
+      - description: File path
+        in: path
+        name: path
+        required: true
+        type: string
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: File contents
+          schema:
+            type: file
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/main.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/main.ErrorResponse'
+      summary: Get file
+      tags:
+      - files
+schemes:
+- http
+- https
+securityDefinitions:
+  TokenAuth:
+    description: JWT token for authentication
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

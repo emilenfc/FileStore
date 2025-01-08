@@ -15,8 +15,12 @@ import (
 	"strings"
 	"time"
 
+	_ "filestore/docs"
+
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 var uploadDir string
@@ -31,7 +35,21 @@ type UploadResponse struct {
 	FullPath string `json:"full_path"`
 }
 
-// UploadHandler to work with user authentication and folders
+// UploadHandler
+// @Summary Upload file
+// @Description Upload a file to a specific folder
+// @Tags files
+// @Accept multipart/form-data
+// @Produce json
+// @Param X-API-Key header string true "API Key for authentication"
+// @Param X-API-Secret header string true "API Secret for authentication"
+// @Param folder formData string true "Folder name" required
+// @Param file formData file true "File to upload" required
+// @Success 200 {object} UploadResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /upload [post]
 func UploadHandler(c *gin.Context) {
 	// Get API credentials from header
 	apiKey := c.GetHeader("X-API-Key")
@@ -119,7 +137,7 @@ func UploadHandler(c *gin.Context) {
 		return
 	}
 
-	// // Save file record in database
+	// Save file record in database
 	// fileRecord := models.File{
 	// 	Name:     fileName,
 	// 	Path:     filePath,
@@ -144,12 +162,32 @@ func UploadHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-// filestore serves the uploaded files
+// FileStore handler
+// @Summary Get file
+// @Description Download a file
+// @Tags files
+// @Produce octet-stream
+// @Param path path string true "File path"
+// @Success 200 {file} binary "File contents"
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Router /uploads/{path} [get]
 func filestore(c *gin.Context) {
 	// Extract path components
 	path := c.Param("path")
+	fmt.Println("path", path)
 
-	components := strings.Split(path, "/")[1:] // spliting and Remove empty string at the beginning
+	// Decode the URL-encoded path
+	decodedPath, err := url.QueryUnescape(path)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid file path"})
+		return
+	}
+
+	fmt.Println("decodedPath", decodedPath)
+
+	// Extract components after decoding
+	components := strings.Split(decodedPath, "/")[1:] // spliting and Remove empty string at the beginning
 	fmt.Println("components", components)
 
 	if len(components) < 3 {
@@ -181,6 +219,26 @@ func filestore(c *gin.Context) {
 	c.File(filePath)
 }
 
+// main.go handlers
+// @title File Store API
+// @version 1.0
+// @description A secure file storage API with user authentication and folder management
+
+// @contact.name API Support
+// @contact.email iyaemile4@gmail.com
+// @contact.phone +250783544364
+
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host localhost:8085
+// @BasePath /
+// @schemes http https
+
+// @securityDefinitions.apikey TokenAuth
+// @in header
+// @name Authorization
+// @description JWT token for authentication
 func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Fatal("Error loading .env file")
@@ -198,6 +256,14 @@ func main() {
 
 	// Initialize Gin router
 	r := gin.Default()
+
+	url := ginSwagger.URL(baseURL + "/swagger/doc.json")
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
+
+	// You can also add a direct redirect route
+	r.GET("/docs", func(c *gin.Context) {
+		c.Redirect(http.StatusMovedPermanently, "/swagger/index.html")
+	})
 
 	// Add CORS middleware
 	r.Use(func(c *gin.Context) {
@@ -235,4 +301,8 @@ func main() {
 	fmt.Printf("Server started at %s\n", baseURL)
 	log.Fatal(r.Run(":8085"))
 
+}
+
+type ErrorResponse struct {
+	Error string `json:"error" example:"Invalid credentials"`
 }

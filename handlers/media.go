@@ -14,6 +14,16 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// GetUserFolders handler
+// @Summary Get user folders
+// @Description Get list of folders for the current user
+// @Tags folders
+// @Produce json
+// @Security TokenAuth
+// @Success 200 {array} FolderResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /api/folders [get]
 func GetUserFolders(c *gin.Context) {
 	userID := c.GetUint("user_id")
 	var folders []models.Folder
@@ -24,7 +34,17 @@ func GetUserFolders(c *gin.Context) {
 	c.JSON(http.StatusOK, folders)
 }
 
-// GetFolderContents for which is file saved in the folders
+// GetFolderContents handler
+// @Summary Get folder contents
+// @Description Get list of files in a specific folder
+// @Tags folders
+// @Produce json
+// @Security TokenAuth
+// @Param folder path string true "Folder name"
+// @Success 200 {array} FileResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Router /api/folders/{folder} [get]
 func GetFolderContents(c *gin.Context) {
 	userID := c.GetUint("user_id")
 	folderName := c.Param("folder")
@@ -93,4 +113,21 @@ func GetFolderContents(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, response)
+}
+
+type FolderResponse struct {
+	ID        uint      `json:"id" example:"1"`
+	Name      string    `json:"name" example:"DOCUMENTS"`
+	CreatedAt time.Time `json:"created_at" example:"2025-01-08T12:00:00Z"`
+}
+
+type FileResponse struct {
+	Name      string    `json:"name" example:"document.pdf"`
+	URL       string    `json:"url" example:"http://localhost:8085/uploads/ak_123/DOCUMENTS/document.pdf"`
+	CreatedAt time.Time `json:"created_at" example:"2025-01-08T12:00:00Z"`
+	Size      int64     `json:"size" example:"1024"`
+}
+
+type ErrorResponse struct {
+	Error string `json:"error" example:"Invalid credentials"`
 }
