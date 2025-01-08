@@ -1,0 +1,66 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Go binary files
+/bin/
+/pkg/
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Go workspace file
+go.work
+
+# Dependency directories
+/vendor/
+
+# Environment files
+# .env
+# .env.local
+# .env.*.local
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Log files
+*.log
+
+# Local uploads/storage directories
+/uploads/
+/storage/
+/tmp/
+
+# If you're using Air for hot reload
+/tmp/
+.air.toml
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Debugging files
+__debug_bin
+
+# Build output directory
+/build/
+/dist/
+
+# If using Go modules
+# Uncomment if you don't want to commit go.sum
+# go.sum
+
+# Generated files
+*.gen.go
+*_string.go
